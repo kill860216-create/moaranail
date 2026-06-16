@@ -11,6 +11,19 @@
     .badge-pending  { background:#FEF3C7; color:#D97706; border:1px solid #FCD34D; }
     .badge-complete { background:#D1FAE5; color:#059669; border:1px solid #6EE7B7; }
     tr.data-row:hover { background:#fffbf0; cursor:pointer; }
+
+    /* Booking grid */
+    .bslot {
+      width:100%; padding:0.3rem 0; border-radius:0.4rem;
+      font-size:0.65rem; font-weight:500; cursor:pointer;
+      border:1.5px solid; transition:opacity 0.15s, transform 0.1s;
+      font-family:'Noto Sans KR',sans-serif; min-width:46px;
+    }
+    .bslot:hover  { opacity:0.75; transform:scale(0.95); }
+    .bslot:active { transform:scale(0.9); }
+    .bslot-available { background:#F0FBF4; border-color:#86EFAC; color:#15803D; }
+    .bslot-full      { background:#FFF1F1; border-color:#FCA5A5; color:#DC2626; }
+
     .modal-wrap {
       display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4);
       align-items:center; justify-content:center; z-index:100; padding:1rem;
@@ -21,9 +34,9 @@
 <body>
 
 <!-- ── Login ── -->
-<div id="loginScreen" style="min-height:100vh; display:flex; align-items:center; justify-content:center;">
-  <div style="background:#fff; border-radius:1rem; padding:2.5rem; width:100%; max-width:360px; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-    <div style="text-align:center; margin-bottom:2rem;">
+<div id="loginScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:1rem;padding:2.5rem;width:100%;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="text-align:center;margin-bottom:2rem;">
       <div style="width:56px;height:56px;border-radius:50%;background:#FEF3C7;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
         <svg style="width:28px;height:28px;color:#fba700;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -38,7 +51,7 @@
       onfocus="this.style.borderColor='#fba700'" onblur="this.style.borderColor='#e5e7eb'">
     <p id="pwError" style="display:none;color:#ef4444;font-size:0.75rem;text-align:center;margin-top:0.5rem;">비밀번호가 올바르지 않습니다</p>
     <button id="loginBtn"
-      style="width:100%;margin-top:0.75rem;padding:0.75rem;background:#fba700;color:#fff;border:none;border-radius:0.75rem;font-size:0.875rem;font-weight:500;cursor:pointer;font-family:inherit;transition:background 0.2s;">
+      style="width:100%;margin-top:0.75rem;padding:0.75rem;background:#fba700;color:#fff;border:none;border-radius:0.75rem;font-size:0.875rem;font-weight:500;cursor:pointer;font-family:inherit;">
       로그인
     </button>
   </div>
@@ -47,6 +60,7 @@
 <!-- ── Dashboard ── -->
 <div id="dashboard" style="display:none;">
 
+  <!-- Top bar -->
   <header style="background:#fff;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:40;">
     <div style="max-width:1100px;margin:0 auto;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;">
       <div>
@@ -64,60 +78,96 @@
 
   <main style="max-width:1100px;margin:0 auto;padding:2rem 1.5rem;">
 
-    <!-- Stats -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
-      <div style="background:#fff;border-radius:1rem;padding:1.25rem;border:1px solid #f0f0f0;">
-        <p style="font-size:0.75rem;color:#9ca3af;margin-bottom:0.25rem;">전체 문의</p>
-        <p id="statTotal" style="font-size:2rem;font-weight:700;">—</p>
-      </div>
-      <div style="background:#fff;border-radius:1rem;padding:1.25rem;border:1px solid #f0f0f0;">
-        <p style="font-size:0.75rem;color:#9ca3af;margin-bottom:0.25rem;">오늘 접수</p>
-        <p id="statToday" style="font-size:2rem;font-weight:700;color:#fba700;">—</p>
-      </div>
-      <div style="background:#fff;border-radius:1rem;padding:1.25rem;border:1px solid #f0f0f0;">
-        <p style="font-size:0.75rem;color:#9ca3af;margin-bottom:0.25rem;">미처리</p>
-        <p id="statPending" style="font-size:2rem;font-weight:700;color:#D97706;">—</p>
-      </div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:2rem;">
+      <button id="tabBtn-inquiry" onclick="showTab('inquiry')"
+        style="padding:0.5rem 1.25rem;border-radius:999px;border:none;background:#fba700;color:#fff;font-size:0.85rem;font-weight:500;cursor:pointer;font-family:inherit;">
+        문의 관리
+      </button>
+      <button id="tabBtn-booking" onclick="showTab('booking')"
+        style="padding:0.5rem 1.25rem;border-radius:999px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:0.85rem;cursor:pointer;font-family:inherit;">
+        예약 현황
+      </button>
     </div>
 
-    <!-- Filter -->
-    <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;align-items:center;">
-      <button class="tab-btn" data-filter="all"
-        style="padding:0.4rem 1rem;border-radius:999px;border:none;background:#fba700;color:#fff;font-size:0.8rem;font-weight:500;cursor:pointer;font-family:inherit;">전체</button>
-      <button class="tab-btn" data-filter="pending"
-        style="padding:0.4rem 1rem;border-radius:999px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:0.8rem;cursor:pointer;font-family:inherit;">대기중</button>
-      <button class="tab-btn" data-filter="complete"
-        style="padding:0.4rem 1rem;border-radius:999px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:0.8rem;cursor:pointer;font-family:inherit;">완료</button>
-      <button id="refreshBtn"
-        style="margin-left:auto;padding:0.4rem 0.9rem;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-size:0.75rem;color:#6b7280;cursor:pointer;font-family:inherit;">새로고침</button>
-    </div>
+    <!-- ── 문의 관리 섹션 ── -->
+    <div id="section-inquiry">
 
-    <!-- Table -->
-    <div style="background:#fff;border-radius:1rem;border:1px solid #f0f0f0;overflow:hidden;">
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;min-width:680px;">
-          <thead>
-            <tr style="background:#FAFAFA;border-bottom:1px solid #f0f0f0;">
-              <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">이름</th>
-              <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">연락처</th>
-              <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">서비스</th>
-              <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">문의 내용</th>
-              <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">접수일</th>
-              <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">상태</th>
-              <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">처리</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <tr><td colspan="7" style="padding:4rem;text-align:center;font-size:0.875rem;color:#9ca3af;">불러오는 중…</td></tr>
-          </tbody>
-        </table>
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+        <div style="background:#fff;border-radius:1rem;padding:1.25rem;border:1px solid #f0f0f0;">
+          <p style="font-size:0.75rem;color:#9ca3af;margin-bottom:0.25rem;">전체 문의</p>
+          <p id="statTotal" style="font-size:2rem;font-weight:700;">—</p>
+        </div>
+        <div style="background:#fff;border-radius:1rem;padding:1.25rem;border:1px solid #f0f0f0;">
+          <p style="font-size:0.75rem;color:#9ca3af;margin-bottom:0.25rem;">오늘 접수</p>
+          <p id="statToday" style="font-size:2rem;font-weight:700;color:#fba700;">—</p>
+        </div>
+        <div style="background:#fff;border-radius:1rem;padding:1.25rem;border:1px solid #f0f0f0;">
+          <p style="font-size:0.75rem;color:#9ca3af;margin-bottom:0.25rem;">미처리</p>
+          <p id="statPending" style="font-size:2rem;font-weight:700;color:#D97706;">—</p>
+        </div>
       </div>
-    </div>
+
+      <!-- Filter -->
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;align-items:center;">
+        <button class="inq-tab" data-filter="all"
+          style="padding:0.4rem 1rem;border-radius:999px;border:none;background:#fba700;color:#fff;font-size:0.8rem;font-weight:500;cursor:pointer;font-family:inherit;">전체</button>
+        <button class="inq-tab" data-filter="pending"
+          style="padding:0.4rem 1rem;border-radius:999px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:0.8rem;cursor:pointer;font-family:inherit;">대기중</button>
+        <button class="inq-tab" data-filter="complete"
+          style="padding:0.4rem 1rem;border-radius:999px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:0.8rem;cursor:pointer;font-family:inherit;">완료</button>
+        <button id="refreshBtn"
+          style="margin-left:auto;padding:0.4rem 0.9rem;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-size:0.75rem;color:#6b7280;cursor:pointer;font-family:inherit;">새로고침</button>
+      </div>
+
+      <!-- Table -->
+      <div style="background:#fff;border-radius:1rem;border:1px solid #f0f0f0;overflow:hidden;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;min-width:680px;">
+            <thead>
+              <tr style="background:#FAFAFA;border-bottom:1px solid #f0f0f0;">
+                <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">이름</th>
+                <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">연락처</th>
+                <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">서비스</th>
+                <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">문의 내용</th>
+                <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">접수일</th>
+                <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">상태</th>
+                <th style="padding:0.75rem 1rem;text-align:left;font-size:0.7rem;font-weight:500;color:#9ca3af;">처리</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="7" style="padding:4rem;text-align:center;font-size:0.875rem;color:#9ca3af;">불러오는 중…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /section-inquiry -->
+
+    <!-- ── 예약 현황 섹션 ── -->
+    <div id="section-booking" style="display:none;">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+        <button onclick="prevBookingWeek()"
+          style="padding:0.4rem 1rem;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-size:0.8rem;color:#6b7280;cursor:pointer;font-family:inherit;">← 이전 주</button>
+        <p id="bookingWeekLabel" style="font-size:0.875rem;font-weight:500;"></p>
+        <button onclick="nextBookingWeek()"
+          style="padding:0.4rem 1rem;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-size:0.8rem;color:#6b7280;cursor:pointer;font-family:inherit;">다음 주 →</button>
+      </div>
+
+      <p style="font-size:0.75rem;color:#9ca3af;margin-bottom:1rem;">슬롯을 클릭하면 예약가능 ↔ 마감이 즉시 저장됩니다</p>
+
+      <div style="background:#fff;border-radius:1rem;border:1px solid #f0f0f0;overflow:hidden;">
+        <div id="bookingGridWrap" style="overflow-x:auto;"></div>
+      </div>
+
+    </div><!-- /section-booking -->
 
   </main>
 </div>
 
-<!-- ── Modal ── -->
+<!-- ── Detail Modal ── -->
 <div id="modal" class="modal-wrap">
   <div style="background:#fff;border-radius:1rem;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
     <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;">
@@ -127,7 +177,7 @@
     <div id="modalContent" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;"></div>
     <div style="padding:0 1.5rem 1.5rem;display:flex;gap:0.75rem;">
       <button id="modalCompleteBtn"
-        style="flex:1;padding:0.65rem;background:#fba700;color:#fff;border:none;border-radius:0.75rem;font-size:0.875rem;font-weight:500;cursor:pointer;font-family:inherit;transition:background 0.2s;">
+        style="flex:1;padding:0.65rem;background:#fba700;color:#fff;border:none;border-radius:0.75rem;font-size:0.875rem;font-weight:500;cursor:pointer;font-family:inherit;">
         완료 처리
       </button>
       <button id="modalCancelBtn"
@@ -138,28 +188,37 @@
   </div>
 </div>
 
-<!-- Supabase SDK 마지막에 로드 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const ADMIN_PW     = 'moaranail2024';
   const SUPABASE_URL = 'https://tylmxvrkpukaldoznuwb.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bG14dnJrcHVrYWxkb3pudXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYxMDQsImV4cCI6MjA5NzE5MjEwNH0.EkIjICI72zPta2bdgZlv3qL7iTT-lHi7Vo2_0YgfOdE';
 
-  let db             = null;
-  let allRows        = [];
-  let currentFilter  = 'all';
-  let selectedId     = null;
+  const BOOKING_TIMES = [
+    '10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30',
+    '14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30',
+    '18:00','18:30','19:00','19:30'
+  ];
+  const DAY_LABELS = ['일','월','화','수','목','금','토'];
 
-  // ── Login ────────────────────────────────────────────────────────────────
+  let db            = null;
+  let allRows       = [];
+  let inqFilter     = 'all';
+  let selectedId    = null;
+  let bookingData   = {};
+  let bookingWeekOffset = 0;
+  let bookingTabLoaded  = false;
+
+  // ── Login ─────────────────────────────────────────────────────────────────
   document.getElementById('loginBtn').addEventListener('click', login);
   document.getElementById('pwInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') login();
   });
 
   function login() {
-    const val = document.getElementById('pwInput').value;
+    var val = document.getElementById('pwInput').value;
     if (val !== ADMIN_PW) {
-      const err = document.getElementById('pwError');
+      var err = document.getElementById('pwError');
       err.style.display = 'block';
       setTimeout(function() { err.style.display = 'none'; }, 3000);
       return;
@@ -167,62 +226,48 @@
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    loadData();
+    loadInquiries();
   }
 
-  // ── Logout ───────────────────────────────────────────────────────────────
+  // ── Logout ────────────────────────────────────────────────────────────────
   document.getElementById('logoutBtn').addEventListener('click', function() {
-    db = null;
-    allRows = [];
+    db = null; allRows = []; bookingData = {}; bookingTabLoaded = false;
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('pwInput').value = '';
   });
 
-  // ── Filter tabs ───────────────────────────────────────────────────────────
-  document.querySelectorAll('.tab-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      currentFilter = btn.dataset.filter;
-      document.querySelectorAll('.tab-btn').forEach(function(b) {
-        if (b.dataset.filter === currentFilter) {
-          b.style.background = '#fba700'; b.style.color = '#fff'; b.style.border = 'none';
-        } else {
-          b.style.background = '#fff'; b.style.color = '#6b7280'; b.style.border = '1.5px solid #e5e7eb';
-        }
-      });
-      renderTable();
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  function showTab(tab) {
+    document.getElementById('section-inquiry').style.display = tab === 'inquiry' ? 'block' : 'none';
+    document.getElementById('section-booking').style.display = tab === 'booking' ? 'block' : 'none';
+    var active   = { background:'#fba700', color:'#fff',    border:'none' };
+    var inactive = { background:'#fff',    color:'#6b7280', border:'1.5px solid #e5e7eb' };
+    ['inquiry','booking'].forEach(function(t) {
+      var btn = document.getElementById('tabBtn-' + t);
+      var s   = t === tab ? active : inactive;
+      btn.style.background = s.background;
+      btn.style.color      = s.color;
+      btn.style.border     = s.border;
     });
-  });
-
-  document.getElementById('refreshBtn').addEventListener('click', loadData);
-
-  // ── Modal close ───────────────────────────────────────────────────────────
-  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
-  document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
-  document.getElementById('modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
-  document.getElementById('modalCompleteBtn').addEventListener('click', function() {
-    if (selectedId) updateStatus(selectedId, true);
-  });
-
-  function closeModal() {
-    document.getElementById('modal').classList.remove('open');
+    if (tab === 'booking' && !bookingTabLoaded) {
+      bookingTabLoaded = true;
+      loadBookingData();
+    }
   }
 
-  // ── Data ─────────────────────────────────────────────────────────────────
-  async function loadData() {
+  // ── Inquiry: Load ─────────────────────────────────────────────────────────
+  document.getElementById('refreshBtn').addEventListener('click', loadInquiries);
+
+  async function loadInquiries() {
     document.getElementById('tableBody').innerHTML =
       '<tr><td colspan="7" style="padding:4rem;text-align:center;font-size:0.875rem;color:#9ca3af;">불러오는 중…</td></tr>';
-
     var result = await db.from('consultations').select('*').order('created_at', { ascending: false });
-
     if (result.error) {
       document.getElementById('tableBody').innerHTML =
         '<tr><td colspan="7" style="padding:4rem;text-align:center;font-size:0.875rem;color:#ef4444;">로드 실패: ' + result.error.message + '</td></tr>';
       return;
     }
-
     allRows = result.data || [];
     updateStats();
     renderTable();
@@ -231,23 +276,34 @@
   function updateStats() {
     var today = new Date().toISOString().slice(0, 10);
     document.getElementById('statTotal').textContent   = allRows.length;
-    document.getElementById('statToday').textContent   = allRows.filter(function(r) { return r.created_at && r.created_at.slice(0,10) === today; }).length;
-    document.getElementById('statPending').textContent = allRows.filter(function(r) { return r.status === 'pending'; }).length;
+    document.getElementById('statToday').textContent   = allRows.filter(function(r){ return r.created_at && r.created_at.slice(0,10) === today; }).length;
+    document.getElementById('statPending').textContent = allRows.filter(function(r){ return r.status === 'pending'; }).length;
   }
+
+  // Inquiry filter tabs
+  document.querySelectorAll('.inq-tab').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      inqFilter = btn.dataset.filter;
+      document.querySelectorAll('.inq-tab').forEach(function(b) {
+        b.style.background = b.dataset.filter === inqFilter ? '#fba700' : '#fff';
+        b.style.color      = b.dataset.filter === inqFilter ? '#fff'    : '#6b7280';
+        b.style.border     = b.dataset.filter === inqFilter ? 'none'    : '1.5px solid #e5e7eb';
+      });
+      renderTable();
+    });
+  });
 
   function renderTable() {
     var filtered = allRows.filter(function(r) {
-      if (currentFilter === 'pending')  return r.status === 'pending';
-      if (currentFilter === 'complete') return r.status === 'complete';
+      if (inqFilter === 'pending')  return r.status === 'pending';
+      if (inqFilter === 'complete') return r.status === 'complete';
       return true;
     });
-
     if (filtered.length === 0) {
       document.getElementById('tableBody').innerHTML =
         '<tr><td colspan="7" style="padding:4rem;text-align:center;font-size:0.875rem;color:#9ca3af;">문의 내역이 없습니다</td></tr>';
       return;
     }
-
     document.getElementById('tableBody').innerHTML = filtered.map(function(r) {
       var date = r.created_at
         ? new Date(r.created_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })
@@ -257,68 +313,158 @@
         ? '<span class="badge-complete" style="font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:999px;font-weight:500;">완료</span>'
         : '<span class="badge-pending"  style="font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:999px;font-weight:500;">대기중</span>';
       var completeBtn = r.status !== 'complete'
-        ? '<button onclick="updateStatus(\'' + r.id + '\', false)" style="font-size:0.7rem;padding:0.3rem 0.7rem;border-radius:0.5rem;background:#D1FAE5;color:#059669;border:1px solid #6EE7B7;cursor:pointer;font-family:inherit;">완료</button>'
+        ? '<button onclick="updateInqStatus(\'' + r.id + '\')" style="font-size:0.7rem;padding:0.3rem 0.7rem;border-radius:0.5rem;background:#D1FAE5;color:#059669;border:1px solid #6EE7B7;cursor:pointer;font-family:inherit;">완료</button>'
         : '<span style="font-size:0.7rem;color:#d1d5db;">-</span>';
-
       return '<tr class="data-row" onclick="openModal(\'' + r.id + '\')" style="border-bottom:1px solid #f9f9f9;">'
-        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;font-weight:500;">' + (r.name||'-') + '</td>'
-        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;color:#4b5563;">' + (r.phone||'-') + '</td>'
-        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;color:#4b5563;">' + (r.service||'-') + '</td>'
-        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;color:#6b7280;">' + (preview||'-') + '</td>'
-        + '<td style="padding:0.75rem 1rem;font-size:0.75rem;color:#9ca3af;">' + date + '</td>'
+        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;font-weight:500;">' + (r.name||'-')    + '</td>'
+        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;color:#4b5563;">'   + (r.phone||'-')   + '</td>'
+        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;color:#4b5563;">'   + (r.service||'-') + '</td>'
+        + '<td style="padding:0.75rem 1rem;font-size:0.875rem;color:#6b7280;">'   + (preview||'-')   + '</td>'
+        + '<td style="padding:0.75rem 1rem;font-size:0.75rem;color:#9ca3af;">'    + date             + '</td>'
         + '<td style="padding:0.75rem 1rem;">' + badge + '</td>'
         + '<td style="padding:0.75rem 1rem;" onclick="event.stopPropagation();">' + completeBtn + '</td>'
         + '</tr>';
     }).join('');
   }
 
-  // ── Modal ─────────────────────────────────────────────────────────────────
+  // ── Inquiry: Modal ────────────────────────────────────────────────────────
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+  document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+  document.getElementById('modalCompleteBtn').addEventListener('click', function() {
+    if (selectedId) updateInqStatus(selectedId, true);
+  });
+
   function openModal(id) {
-    var r = allRows.find(function(x) { return x.id === id; });
+    var r = allRows.find(function(x){ return x.id === id; });
     if (!r) return;
     selectedId = id;
-
     var date = r.created_at ? new Date(r.created_at).toLocaleString('ko-KR') : '-';
-    var fields = [
-      ['이름',     r.name    || '-'],
-      ['연락처',   r.phone   || '-'],
-      ['서비스',   r.service || '-'],
-      ['문의 내용', r.message || '-'],
-      ['접수일시', date],
-      ['상태',     r.status === 'complete' ? '완료' : '대기중'],
-    ];
-
-    document.getElementById('modalContent').innerHTML = fields.map(function(f) {
+    var fields = [['이름',r.name||'-'],['연락처',r.phone||'-'],['서비스',r.service||'-'],['문의 내용',r.message||'-'],['접수일시',date],['상태',r.status==='complete'?'완료':'대기중']];
+    document.getElementById('modalContent').innerHTML = fields.map(function(f){
       return '<div><p style="font-size:0.7rem;font-weight:500;color:#9ca3af;margin-bottom:0.2rem;">' + f[0] + '</p>'
            + '<p style="font-size:0.875rem;word-break:break-all;">' + f[1] + '</p></div>';
     }).join('');
-
     var btn = document.getElementById('modalCompleteBtn');
     if (r.status === 'complete') {
-      btn.textContent = '이미 완료된 문의';
-      btn.disabled = true;
-      btn.style.opacity = '0.4';
-      btn.style.cursor = 'not-allowed';
+      btn.textContent = '이미 완료된 문의'; btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed';
     } else {
-      btn.textContent = '완료 처리';
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
+      btn.textContent = '완료 처리'; btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
     }
-
     document.getElementById('modal').classList.add('open');
   }
 
-  // ── Status Update ─────────────────────────────────────────────────────────
-  async function updateStatus(id, fromModal) {
-    var result = await db.from('consultations').update({ status: 'complete' }).eq('id', id);
-    if (result.error) { alert('업데이트 실패: ' + result.error.message); return; }
-    var row = allRows.find(function(r) { return r.id === id; });
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+  async function updateInqStatus(id, fromModal) {
+    var res = await db.from('consultations').update({ status:'complete' }).eq('id', id);
+    if (res.error) { alert('업데이트 실패: ' + res.error.message); return; }
+    var row = allRows.find(function(r){ return r.id === id; });
     if (row) row.status = 'complete';
     if (fromModal) closeModal();
-    updateStats();
-    renderTable();
+    updateStats(); renderTable();
   }
+
+  // ── Booking: helpers ──────────────────────────────────────────────────────
+  function getMondayOf(date) {
+    var d    = new Date(date);
+    var diff = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  function toKey(d) { return d.toISOString().slice(0, 10); }
+  function fmt(d)   { return (d.getMonth()+1) + '/' + d.getDate(); }
+  function getBookingStatus(dateKey, time) {
+    return (bookingData[dateKey] && bookingData[dateKey][time]) || 'available';
+  }
+
+  // ── Booking: Load ─────────────────────────────────────────────────────────
+  async function loadBookingData() {
+    document.getElementById('bookingGridWrap').innerHTML =
+      '<div style="padding:3rem;text-align:center;font-size:0.875rem;color:#9ca3af;">불러오는 중…</div>';
+
+    var base = getMondayOf(new Date());
+    base.setDate(base.getDate() + bookingWeekOffset * 7);
+    var sat = new Date(base); sat.setDate(base.getDate() + 5);
+
+    var result = await db.from('bookings')
+      .select('date,time,status')
+      .gte('date', toKey(base))
+      .lte('date', toKey(sat));
+
+    bookingData = {};
+    (result.data || []).forEach(function(row) {
+      if (!bookingData[row.date]) bookingData[row.date] = {};
+      bookingData[row.date][row.time] = row.status;
+    });
+
+    renderBookingGrid();
+  }
+
+  function renderBookingGrid() {
+    var base = getMondayOf(new Date());
+    base.setDate(base.getDate() + bookingWeekOffset * 7);
+
+    var days = [];
+    for (var i = 0; i < 6; i++) {
+      var d = new Date(base); d.setDate(base.getDate() + i); days.push(d);
+    }
+    var today = toKey(new Date());
+    document.getElementById('bookingWeekLabel').textContent =
+      fmt(days[0]) + ' (월) – ' + fmt(days[5]) + ' (토)';
+
+    var html = '<table style="width:100%;border-collapse:collapse;min-width:520px;">';
+    html += '<thead><tr style="background:#FAFAFA;border-bottom:1px solid #f0f0f0;">';
+    html += '<th style="padding:0.6rem 0.5rem;text-align:left;font-size:0.65rem;color:#9ca3af;min-width:48px;">시간</th>';
+    days.forEach(function(d) {
+      var key = toKey(d); var isT = key === today;
+      html += '<th style="padding:0.6rem 0.25rem;text-align:center;font-size:0.65rem;color:' + (isT?'#fba700':'#9ca3af') + ';">'
+        + '<div>' + DAY_LABELS[d.getDay()] + '</div>'
+        + '<div style="font-size:0.875rem;' + (isT?'font-weight:700;':'') + '">' + d.getDate() + '</div>'
+        + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    BOOKING_TIMES.forEach(function(time, i) {
+      var rowBg = i % 2 === 0 ? '#fff' : '#FAFAFA';
+      html += '<tr style="border-top:1px solid #f0f0f0;background:' + rowBg + ';">';
+      html += '<td style="padding:0.2rem 0.5rem;font-size:0.65rem;color:#9ca3af;">' + time + '</td>';
+      days.forEach(function(d) {
+        var key    = toKey(d);
+        var status = getBookingStatus(key, time);
+        var cls    = status === 'full' ? 'bslot bslot-full' : 'bslot bslot-available';
+        var label  = status === 'full' ? '마감' : '가능';
+        html += '<td style="padding:0.2rem;">'
+          + '<button class="' + cls + '" onclick="toggleBookingSlot(\'' + key + '\',\'' + time + '\')">' + label + '</button>'
+          + '</td>';
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('bookingGridWrap').innerHTML = html;
+  }
+
+  // ── Booking: Toggle ───────────────────────────────────────────────────────
+  async function toggleBookingSlot(date, time) {
+    var current = getBookingStatus(date, time);
+    var next    = current === 'full' ? 'available' : 'full';
+
+    if (!bookingData[date]) bookingData[date] = {};
+    bookingData[date][time] = next;
+    renderBookingGrid();
+
+    var res = await db.from('bookings').upsert({ date: date, time: time, status: next });
+    if (res.error) {
+      bookingData[date][time] = current;
+      renderBookingGrid();
+      alert('저장 실패: ' + res.error.message);
+    }
+  }
+
+  function prevBookingWeek() { bookingWeekOffset--; loadBookingData(); }
+  function nextBookingWeek() { bookingWeekOffset++; loadBookingData(); }
 </script>
 
 </body>

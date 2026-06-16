@@ -12,42 +12,57 @@
     html { scroll-behavior: smooth; }
     body { background: #FAFAF7; font-family: 'Noto Sans KR', sans-serif; color: #1C1B1A; }
 
-    /* ── Slot states ── */
-    .slot-available  { background:#F0FBF4; border:1.5px solid #86EFAC; color:#15803D; }
-    .slot-limited    { background:#FFFBEB; border:1.5px solid #FCD34D; color:#D97706; }
-    .slot-full       { background:#FFF1F1; border:1.5px solid #FCA5A5; color:#DC2626; }
-    .slot-closed     { background:#F5F5F5; border:1.5px solid #E5E7EB; color:#9CA3AF; }
+    .slot-available {
+      background: #F0FBF4; border: 1.5px solid #86EFAC; color: #15803D;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      width: 100%; border-radius: 0.5rem; padding: 0.375rem 0; font-size: 0.7rem; font-weight: 500;
+      min-width: 50px;
+    }
+    .slot-available:hover { background: #dcfce7; transform: scale(0.96); }
 
-    /* ── Buttons ── */
+    .slot-full {
+      background: #FFF1F1; border: 1.5px solid #FCA5A5; color: #DC2626;
+      cursor: default;
+      width: 100%; border-radius: 0.5rem; padding: 0.375rem 0; font-size: 0.7rem; font-weight: 500;
+      min-width: 50px;
+    }
+
     .btn-primary {
-      background:#C8956C; color:#fff;
+      background: #C8956C; color: #fff;
       transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
     }
-    .btn-primary:hover  { background:#B37F58; transform:translateY(-1px); box-shadow:0 8px 24px rgba(200,149,108,0.32); }
-    .btn-primary:focus  { outline:none; box-shadow:0 0 0 3px rgba(200,149,108,0.4); }
-    .btn-primary:active { transform:scale(0.98); box-shadow:none; }
-    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .btn-primary:hover  { background: #B37F58; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,149,108,0.32); }
+    .btn-primary:focus  { outline: none; box-shadow: 0 0 0 3px rgba(200,149,108,0.4); }
+    .btn-primary:active { transform: scale(0.98); }
 
     .btn-ghost {
-      border:1.5px solid #E8E4DF; color:#6B6560; background:transparent;
+      border: 1.5px solid #E8E4DF; color: #6B6560; background: transparent;
       transition: background 0.2s, color 0.2s, transform 0.15s;
     }
-    .btn-ghost:hover  { background:#F5EDE4; color:#C8956C; border-color:#C8956C; }
-    .btn-ghost:focus  { outline:none; box-shadow:0 0 0 3px rgba(200,149,108,0.2); }
-    .btn-ghost:active { transform:scale(0.98); }
+    .btn-ghost:hover  { background: #F5EDE4; color: #C8956C; border-color: #C8956C; }
+    .btn-ghost:active { transform: scale(0.98); }
 
-    /* ── Admin slot clickable ── */
-    .admin-active .slot-clickable {
-      cursor:pointer;
-      transition: opacity 0.15s, transform 0.1s;
+    #slot-tooltip {
+      position: fixed;
+      background: rgba(28,27,26,0.85);
+      color: #fff;
+      font-size: 0.68rem;
+      font-family: 'Noto Sans KR', sans-serif;
+      padding: 0.3rem 0.7rem;
+      border-radius: 0.4rem;
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+      display: none;
     }
-    .admin-active .slot-clickable:hover  { opacity:0.8; transform:scale(0.97); }
-    .admin-active .slot-clickable:active { transform:scale(0.94); }
   </style>
 </head>
 <body>
 
-  <!-- ── Nav ── -->
+  <div id="slot-tooltip">클릭하면 예약링크로 이동합니다</div>
+
+  <!-- Nav -->
   <nav class="sticky top-0 z-40 py-4 px-6"
        style="background:rgba(250,250,247,0.95); backdrop-filter:blur(12px); box-shadow:0 1px 20px rgba(0,0,0,0.06);">
     <div class="max-w-5xl mx-auto flex items-center justify-between">
@@ -71,86 +86,39 @@
     <!-- Header -->
     <div class="text-center mb-10">
       <p class="text-xs font-light mb-3" style="color:#C8956C; letter-spacing:0.28em;">BOOKING STATUS</p>
-      <h1 class="text-3xl font-semibold mb-3" style="font-family:'Playfair Display',serif; color:#1C1B1A;">예약 현황</h1>
-      <p class="text-sm" style="color:#6B6560;">예약 가능한 시간대를 미리 확인하세요</p>
+      <h1 class="text-3xl font-semibold mb-3" style="font-family:'Playfair Display',serif;">예약 현황</h1>
+      <p class="text-sm" style="color:#6B6560;">예약 가능한 시간대를 확인하고 예약하세요</p>
     </div>
 
     <!-- Legend -->
-    <div class="flex flex-wrap justify-center gap-5 mb-8">
+    <div class="flex flex-wrap justify-center gap-6 mb-8">
       <div class="flex items-center gap-2">
         <div class="w-3 h-3 rounded-full" style="background:#86EFAC;"></div>
-        <span class="text-xs" style="color:#6B6560;">예약 가능</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full" style="background:#FCD34D;"></div>
-        <span class="text-xs" style="color:#6B6560;">마감 임박</span>
+        <span class="text-xs" style="color:#6B6560;">예약 가능 (클릭 시 예약 페이지로 이동)</span>
       </div>
       <div class="flex items-center gap-2">
         <div class="w-3 h-3 rounded-full" style="background:#FCA5A5;"></div>
         <span class="text-xs" style="color:#6B6560;">마감</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full" style="background:#E5E7EB;"></div>
-        <span class="text-xs" style="color:#6B6560;">휴무</span>
       </div>
     </div>
 
     <!-- Week nav -->
     <div class="flex items-center justify-between mb-5">
       <button onclick="prevWeek()" class="btn-ghost px-4 py-2 rounded-full text-sm">← 이전 주</button>
-      <p id="weekLabel" class="text-sm font-medium" style="color:#1C1B1A;"></p>
+      <p id="weekLabel" class="text-sm font-medium"></p>
       <button onclick="nextWeek()" class="btn-ghost px-4 py-2 rounded-full text-sm">다음 주 →</button>
     </div>
 
     <!-- Schedule -->
     <div id="scheduleWrap" class="rounded-2xl overflow-hidden border" style="border-color:#F0EAE4;"></div>
 
-    <!-- Naver CTA -->
+    <!-- CTA -->
     <div class="text-center mt-10 py-10 rounded-3xl" style="background:linear-gradient(135deg,#FFF8F3,#F5EDE4);">
-      <p class="font-medium mb-1" style="color:#1C1B1A;">원하는 시간대를 확인하셨나요?</p>
+      <p class="font-medium mb-1">원하는 시간대를 확인하셨나요?</p>
       <p class="text-sm mb-6" style="color:#6B6560;">네이버 예약으로 간편하게 예약하세요</p>
       <a href="https://map.naver.com/p/entry/place/1428294903?entry=bmp&placePath=%2Fstylist" target="_blank" rel="noopener">
         <button class="btn-primary px-8 py-3.5 rounded-full font-medium">네이버로 예약하기</button>
       </a>
-    </div>
-
-    <!-- Admin trigger (subtle) -->
-    <div class="text-center mt-10">
-      <button onclick="toggleAdminPanel()" id="adminTrigger"
-              class="text-xs px-4 py-2 rounded-full border transition-colors"
-              style="color:#C4BDB8; border-color:#E8E4DF;">
-        관리자
-      </button>
-    </div>
-
-    <!-- Admin panel -->
-    <div id="adminPanel" class="hidden mt-5 p-6 rounded-2xl border" style="border-color:#F0EAE4; background:#FFFCF9;">
-      <p class="font-medium mb-4" style="color:#1C1B1A;">관리자 모드</p>
-
-      <div id="loginForm">
-        <p class="text-sm mb-3" style="color:#6B6560;">비밀번호를 입력하세요</p>
-        <div class="flex gap-3">
-          <input type="password" id="pwInput" placeholder="비밀번호"
-            class="flex-1 px-4 py-2.5 rounded-xl border text-sm"
-            style="border-color:#E8E4DF; background:#fff; outline:none; transition:border-color 0.2s;"
-            onfocus="this.style.borderColor='#C8956C'" onblur="this.style.borderColor='#E8E4DF'"
-            onkeydown="if(event.key==='Enter') login()">
-          <button onclick="login()" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-medium">확인</button>
-        </div>
-        <p id="pwError" class="hidden text-xs mt-2" style="color:#DC2626;">비밀번호가 올바르지 않습니다</p>
-      </div>
-
-      <div id="adminControls" class="hidden">
-        <p class="text-sm mb-4" style="color:#6B6560;">
-          시간대를 클릭하면 상태가 순환됩니다&nbsp;
-          <span class="text-xs" style="color:#9CA3AF;">(가능 → 임박 → 마감 → 휴무)</span>
-        </p>
-        <div class="flex gap-3">
-          <button onclick="saveData()" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-medium">저장하기</button>
-          <button onclick="logout()" class="btn-ghost px-5 py-2.5 rounded-xl text-sm">잠금</button>
-        </div>
-        <p id="saveMsg" class="hidden text-xs mt-3" style="color:#15803D;">✓ 저장되었습니다</p>
-      </div>
     </div>
 
   </main>
@@ -161,154 +129,126 @@
     </p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ── Config ──────────────────────────────────────────────────────────────
-    const ADMIN_PW    = 'moaranail1234';
-    const STORE_KEY   = 'moaranail_booking_v1';
-    const TIME_SLOTS  = ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
-    const DAY_LABELS  = ['일','월','화','수','목','금','토'];
-    const STATUSES    = ['available','limited','full','closed'];
-    const STATUS_TEXT = { available:'예약 가능', limited:'마감 임박', full:'마감', closed:'휴무' };
-    const STATUS_CLS  = { available:'slot-available', limited:'slot-limited', full:'slot-full', closed:'slot-closed' };
+    const NAVER_URL    = 'https://map.naver.com/p/entry/place/1428294903?entry=bmp&placePath=%2Fstylist';
+    const SUPABASE_URL = 'https://tylmxvrkpukaldoznuwb.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bG14dnJrcHVrYWxkb3pudXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYxMDQsImV4cCI6MjA5NzE5MjEwNH0.EkIjICI72zPta2bdgZlv3qL7iTT-lHi7Vo2_0YgfOdE';
 
-    // ── State ────────────────────────────────────────────────────────────────
-    let weekOffset  = 0;   // 0 = this week
-    let isAdmin     = false;
-    let data        = {};  // { 'YYYY-MM-DD': { '10:00': 'available', … } }
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    const TIMES = [
+      '10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30',
+      '14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30',
+      '18:00','18:30','19:00','19:30'
+    ];
+    const DAY_LABELS = ['일','월','화','수','목','금','토'];
+
+    let weekOffset  = 0;
+    let bookingData = {};
+    const tooltip   = document.getElementById('slot-tooltip');
+
     function getMondayOf(date) {
       const d = new Date(date);
-      const diff = (d.getDay() + 6) % 7;  // Mon=0 … Sun=6
+      const diff = (d.getDay() + 6) % 7;
       d.setDate(d.getDate() - diff);
       d.setHours(0, 0, 0, 0);
       return d;
     }
+    function toKey(d) { return d.toISOString().slice(0, 10); }
+    function fmt(d)   { return (d.getMonth() + 1) + '/' + d.getDate(); }
 
-    function toKey(date) {
-      return date.toISOString().slice(0, 10);
-    }
+    async function loadWeekData() {
+      document.getElementById('scheduleWrap').innerHTML =
+        '<div style="padding:3rem;text-align:center;font-size:0.875rem;color:#9ca3af;">불러오는 중…</div>';
 
-    function fmt(date) {
-      return `${date.getMonth() + 1}/${date.getDate()}`;
-    }
+      const base = getMondayOf(new Date());
+      base.setDate(base.getDate() + weekOffset * 7);
+      const sat = new Date(base); sat.setDate(base.getDate() + 5);
 
-    function getStatus(dateKey, time) {
-      return (data[dateKey] && data[dateKey][time]) || 'available';
-    }
+      const { data } = await db.from('bookings')
+        .select('date,time,status')
+        .gte('date', toKey(base))
+        .lte('date', toKey(sat));
 
-    function cycleStatus(dateKey, time) {
-      if (!isAdmin) return;
-      const cur  = getStatus(dateKey, time);
-      const next = STATUSES[(STATUSES.indexOf(cur) + 1) % STATUSES.length];
-      if (!data[dateKey]) data[dateKey] = {};
-      data[dateKey][time] = next;
+      bookingData = {};
+      (data || []).forEach(function(row) {
+        if (!bookingData[row.date]) bookingData[row.date] = {};
+        bookingData[row.date][row.time] = row.status;
+      });
+
       renderSchedule();
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    function getStatus(dateKey, time) {
+      return (bookingData[dateKey] && bookingData[dateKey][time]) || 'available';
+    }
+
     function renderSchedule() {
       const base = getMondayOf(new Date());
       base.setDate(base.getDate() + weekOffset * 7);
 
-      const days = Array.from({ length: 6 }, (_, i) => {
+      const days = [];
+      for (var i = 0; i < 6; i++) {
         const d = new Date(base);
         d.setDate(base.getDate() + i);
-        return d;
-      });
+        days.push(d);
+      }
 
       const today = toKey(new Date());
-      const mon = days[0], sat = days[5];
       document.getElementById('weekLabel').textContent =
-        `${fmt(mon)} (월) – ${fmt(sat)} (토)`;
+        fmt(days[0]) + ' (월) – ' + fmt(days[5]) + ' (토)';
 
-      let html = '<div class="overflow-x-auto"><table class="w-full border-collapse" style="min-width:580px;">';
+      var html = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:560px;">';
 
-      // Head
       html += '<thead><tr style="background:#F5EDE4;">';
-      html += '<th class="py-3 px-3 text-xs font-medium text-left" style="color:#6B6560;min-width:60px;">시간</th>';
-      days.forEach(d => {
+      html += '<th style="padding:0.75rem 0.5rem;text-align:left;font-size:0.7rem;font-weight:500;color:#6B6560;min-width:52px;">시간</th>';
+      days.forEach(function(d) {
         const key = toKey(d);
         const isT = key === today;
-        const isSun = d.getDay() === 0;
-        html += `<th class="py-3 px-2 text-center text-xs font-medium" style="color:${isSun ? '#DC2626' : isT ? '#C8956C' : '#6B6560'};">
-          <div>${DAY_LABELS[d.getDay()]}</div>
-          <div class="text-base ${isT ? 'font-bold' : ''}">${d.getDate()}</div>
-        </th>`;
+        html += '<th style="padding:0.75rem 0.25rem;text-align:center;font-size:0.7rem;font-weight:500;color:' + (isT ? '#C8956C' : '#6B6560') + ';">'
+          + '<div>' + DAY_LABELS[d.getDay()] + '</div>'
+          + '<div style="font-size:1rem;' + (isT ? 'font-weight:700;' : '') + '">' + d.getDate() + '</div>'
+          + '</th>';
       });
-      html += '</tr></thead>';
+      html += '</tr></thead><tbody>';
 
-      // Body
-      html += '<tbody>';
-      TIME_SLOTS.forEach((time, i) => {
+      TIMES.forEach(function(time, i) {
         const rowBg = i % 2 === 0 ? '#fff' : '#FAFAF7';
-        html += `<tr style="border-top:1px solid #F5F0EB; background:${rowBg};">`;
-        html += `<td class="py-2 px-3 text-xs font-medium" style="color:#9CA3AF;">${time}</td>`;
-        days.forEach(d => {
+        html += '<tr style="border-top:1px solid #F5F0EB;background:' + rowBg + ';">';
+        html += '<td style="padding:0.25rem 0.5rem;font-size:0.68rem;font-weight:500;color:#9CA3AF;">' + time + '</td>';
+        days.forEach(function(d) {
           const key    = toKey(d);
           const status = getStatus(key, time);
-          const cls    = STATUS_CLS[status];
-          const label  = STATUS_TEXT[status];
-          const click  = isAdmin ? `onclick="cycleStatus('${key}','${time}')"` : '';
-          html += `<td class="py-2 px-1.5">
-            <button class="slot-clickable w-full py-1.5 rounded-lg text-xs font-medium ${cls}"
-                    ${click} style="min-width:60px;">
-              ${label}
-            </button>
-          </td>`;
+          if (status === 'full') {
+            html += '<td style="padding:0.25rem;"><button class="slot-full">마감</button></td>';
+          } else {
+            html += '<td style="padding:0.25rem;">'
+              + '<a href="' + NAVER_URL + '" target="_blank" rel="noopener">'
+              + '<button class="slot-available">예약 가능</button>'
+              + '</a></td>';
+          }
         });
         html += '</tr>';
       });
+
       html += '</tbody></table></div>';
-
       document.getElementById('scheduleWrap').innerHTML = html;
-      document.body.classList.toggle('admin-active', isAdmin);
+
+      document.querySelectorAll('.slot-available').forEach(function(btn) {
+        btn.addEventListener('mouseenter', function() { tooltip.style.display = 'block'; });
+        btn.addEventListener('mousemove',  function(e) {
+          tooltip.style.left = (e.clientX + 14) + 'px';
+          tooltip.style.top  = (e.clientY - 38) + 'px';
+        });
+        btn.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
+      });
     }
 
-    // ── Week nav ─────────────────────────────────────────────────────────────
-    function prevWeek() { weekOffset--; renderSchedule(); }
-    function nextWeek() { weekOffset++; renderSchedule(); }
+    function prevWeek() { weekOffset--; loadWeekData(); }
+    function nextWeek() { weekOffset++; loadWeekData(); }
 
-    // ── Persistence ──────────────────────────────────────────────────────────
-    function loadData() {
-      try { data = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch { data = {}; }
-    }
-    function saveData() {
-      localStorage.setItem(STORE_KEY, JSON.stringify(data));
-      const msg = document.getElementById('saveMsg');
-      msg.classList.remove('hidden');
-      setTimeout(() => msg.classList.add('hidden'), 2000);
-    }
-
-    // ── Admin ─────────────────────────────────────────────────────────────────
-    function toggleAdminPanel() {
-      document.getElementById('adminPanel').classList.toggle('hidden');
-    }
-    function login() {
-      const val = document.getElementById('pwInput').value;
-      if (val === ADMIN_PW) {
-        isAdmin = true;
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('adminControls').classList.remove('hidden');
-        renderSchedule();
-      } else {
-        const err = document.getElementById('pwError');
-        err.classList.remove('hidden');
-        setTimeout(() => err.classList.add('hidden'), 3000);
-      }
-    }
-    function logout() {
-      isAdmin = false;
-      document.getElementById('adminPanel').classList.add('hidden');
-      document.getElementById('loginForm').classList.remove('hidden');
-      document.getElementById('adminControls').classList.add('hidden');
-      document.getElementById('pwInput').value = '';
-      renderSchedule();
-    }
-
-    // ── Init ─────────────────────────────────────────────────────────────────
-    loadData();
-    renderSchedule();
+    loadWeekData();
   </script>
 
 </body>
