@@ -79,10 +79,15 @@
     .mobile-menu { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.35s ease, opacity 0.3s ease; }
     .mobile-menu.open { max-height: 480px; opacity: 1; }
 
-    /* ── Float btn ── */
-    .float-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 50; transition: transform 0.2s, box-shadow 0.2s; }
-    .float-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(251,167,0,0.4); }
-    .float-btn:active { transform: translateY(-1px); }
+    /* ── Mobile bottom nav ── */
+    .mob-nav { position:fixed; bottom:0; left:0; right:0; z-index:50; background:#fff; box-shadow:0 -2px 16px rgba(0,0,0,0.08); display:none; }
+    @media (max-width: 767px) { .mob-nav { display:block; } body { padding-bottom:64px; } }
+    .mob-nav-inner { display:grid; grid-template-columns:repeat(4,1fr); }
+    .mob-nav-btn { width:100%; padding:0.5rem 0 0.45rem; display:flex; flex-direction:column; align-items:center; gap:0.18rem; border:none; background:transparent; cursor:pointer; font-family:'Noto Sans KR',sans-serif; color:#9ca3af; transition:color 0.15s; }
+    .mob-nav-btn:hover { color:#fba700; }
+    .mob-nav-btn:active { opacity:0.7; }
+    .mob-nav-btn span { font-size:0.6rem; font-weight:500; }
+    .mob-nav-btn.primary { color:#fba700; }
 
     /* ── Tag badge ── */
     .tag { display: inline-block; background: #fff8e6; color: #fba700; border: 1px solid #fba700; font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 500; }
@@ -630,16 +635,49 @@
     </div>
   </footer>
 
-  <!-- ── Float CTA ── -->
-  <a href="https://map.naver.com/p/entry/place/1428294903?entry=bmp&placePath=%2Fstylist" target="_blank" rel="noopener" class="float-btn">
-    <button class="btn-primary px-5 py-3 rounded text-sm font-bold flex items-center gap-2"
-            style="box-shadow:0 4px 20px rgba(251,167,0,0.4);">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
-      </svg>
-      예약하기
-    </button>
-  </a>
+  <!-- ── Mobile Bottom Nav ── -->
+  <nav class="mob-nav">
+    <div class="mob-nav-inner">
+
+      <a href="#services" style="text-decoration:none;">
+        <button class="mob-nav-btn">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+          </svg>
+          <span>시술메뉴</span>
+        </button>
+      </a>
+
+      <a href="#location" style="text-decoration:none;">
+        <button class="mob-nav-btn">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+          </svg>
+          <span>오시는길</span>
+        </button>
+      </a>
+
+      <a href="booking.html" style="text-decoration:none;">
+        <button class="mob-nav-btn">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5"/>
+          </svg>
+          <span>예약현황</span>
+        </button>
+      </a>
+
+      <a href="https://map.naver.com/p/entry/place/1428294903?entry=bmp&placePath=%2Fstylist" target="_blank" rel="noopener" style="text-decoration:none;">
+        <button class="mob-nav-btn primary">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+          </svg>
+          <span style="font-weight:700;">예약하기</span>
+        </button>
+      </a>
+
+    </div>
+  </nav>
 
   <script>
     // Supabase
