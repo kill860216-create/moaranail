@@ -1,0 +1,14 @@
+# 스크린샷 및 임시 파일
+screenshot*.png
+cavabienshop.co.kr_.png
+
+# 개발 파일
+serve.mjs
+CLAUDE.md
+
+# 설치 파일
+*.exe
+
+# 환경변수
+.env
+.env.local
