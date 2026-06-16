@@ -179,8 +179,14 @@
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bG14dnJrcHVrYWxkb3pudXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MTYxMDQsImV4cCI6MjA5NzE5MjEwNH0.EkIjICI72zPta2bdgZlv3qL7iTT-lHi7Vo2_0YgfOdE';
     const ADMIN_PW = 'moaranail2024';
 
-    const { createClient } = supabase;
-    const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+    let db = null;
+    function getDb() {
+      if (!db) {
+        try { db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
+        catch(e) { alert('DB 연결 오류. 새로고침 해주세요.'); return null; }
+      }
+      return db;
+    }
 
     let allRows = [];
     let currentFilter = 'all';
@@ -220,7 +226,8 @@
 
     // ── Data ──────────────────────────────────────────────────────────────────
     async function loadData() {
-      const { data, error } = await db
+      const client = getDb(); if (!client) return;
+      const { data, error } = await client
         .from('consultations')
         .select('*')
         .order('created_at', { ascending: false });
@@ -357,7 +364,8 @@
     }
 
     async function updateStatus(id) {
-      const { error } = await db
+      const client = getDb(); if (!client) return;
+      const { error } = await client
         .from('consultations')
         .update({ status: 'complete' })
         .eq('id', id);
