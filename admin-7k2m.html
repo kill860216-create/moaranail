@@ -18,6 +18,7 @@
       font-size:0.65rem; font-weight:500; cursor:pointer;
       border:1.5px solid; transition:opacity 0.15s, transform 0.1s;
       font-family:'Noto Sans KR',sans-serif; min-width:46px;
+      user-select:none; -webkit-user-select:none;
     }
     .bslot:hover  { opacity:0.75; transform:scale(0.95); }
     .bslot:active { transform:scale(0.9); }
@@ -208,6 +209,10 @@
   let bookingData   = {};
   let bookingWeekOffset = 0;
   let bookingTabLoaded  = false;
+  let isDragging    = false;
+  let dragDate      = null;
+  let dragStatus    = null;
+  let dragChanged   = {};
 
   // ── Login ─────────────────────────────────────────────────────────────────
   document.getElementById('loginBtn').addEventListener('click', login);
@@ -419,7 +424,9 @@
     html += '<th style="padding:0.6rem 0.5rem;text-align:left;font-size:0.65rem;color:#9ca3af;min-width:48px;">시간</th>';
     days.forEach(function(d) {
       var key = toKey(d); var isT = key === today;
-      html += '<th style="padding:0.6rem 0.25rem;text-align:center;font-size:0.65rem;color:' + (isT?'#fba700':'#9ca3af') + ';">'
+      var dayLabel = fmt(d) + '(' + DAY_LABELS[d.getDay()] + ')';
+      html += '<th style="padding:0.6rem 0.25rem;text-align:center;font-size:0.65rem;color:' + (isT?'#fba700':'#9ca3af') + ';cursor:pointer;" '
+        + 'onclick="toggleDaySlots(\'' + key + '\',\'' + dayLabel + '\')" title="클릭: 해당일 전체 마감/가능">'
         + '<div>' + DAY_LABELS[d.getDay()] + '</div>'
         + '<div style="font-size:0.875rem;' + (isT?'font-weight:700;':'') + '">' + d.getDate() + '</div>'
         + '</th>';
@@ -436,7 +443,10 @@
         var cls    = status === 'full' ? 'bslot bslot-full' : 'bslot bslot-available';
         var label  = status === 'full' ? '마감' : '가능';
         html += '<td style="padding:0.2rem;">'
-          + '<button class="' + cls + '" onclick="toggleBookingSlot(\'' + key + '\',\'' + time + '\')">' + label + '</button>'
+          + '<button class="' + cls + '" data-date="' + key + '" data-time="' + time + '" '
+          + 'onmousedown="startDrag(event,\'' + key + '\',\'' + time + '\')" '
+          + 'onmouseover="dragOver(\'' + key + '\',\'' + time + '\')">'
+          + label + '</button>'
           + '</td>';
       });
       html += '</tr>';
@@ -446,22 +456,63 @@
     document.getElementById('bookingGridWrap').innerHTML = html;
   }
 
-  // ── Booking: Toggle ───────────────────────────────────────────────────────
-  async function toggleBookingSlot(date, time) {
-    var current = getBookingStatus(date, time);
-    var next    = current === 'full' ? 'available' : 'full';
+  // ── Booking: 날짜 전체 토글 ───────────────────────────────────────────────
+  async function toggleDaySlots(date, dayLabel) {
+    var allFull = BOOKING_TIMES.every(function(t) { return getBookingStatus(date, t) === 'full'; });
+    var target  = allFull ? 'available' : 'full';
+    var msg     = target === 'full'
+      ? dayLabel + ' 전체를 마감으로 바꾸시겠습니까?'
+      : dayLabel + ' 전체를 예약 가능으로 바꾸시겠습니까?';
+    if (!confirm(msg)) return;
 
     if (!bookingData[date]) bookingData[date] = {};
-    bookingData[date][time] = next;
+    BOOKING_TIMES.forEach(function(t) { bookingData[date][t] = target; });
     renderBookingGrid();
 
-    var res = await db.from('bookings').upsert({ date: date, time: time, status: next });
-    if (res.error) {
-      bookingData[date][time] = current;
-      renderBookingGrid();
-      alert('저장 실패: ' + res.error.message);
+    var upserts = BOOKING_TIMES.map(function(t) { return { date: date, time: t, status: target }; });
+    var res = await db.from('bookings').upsert(upserts);
+    if (res.error) { alert('저장 실패: ' + res.error.message); loadBookingData(); }
+  }
+
+  // ── Booking: 드래그 토글 ──────────────────────────────────────────────────
+  function applySlotDOM(date, time, status) {
+    var btn = document.querySelector('[data-date="' + date + '"][data-time="' + time + '"]');
+    if (!btn) return;
+    btn.className = status === 'full' ? 'bslot bslot-full' : 'bslot bslot-available';
+    btn.textContent = status === 'full' ? '마감' : '가능';
+    if (!bookingData[date]) bookingData[date] = {};
+    bookingData[date][time] = status;
+    dragChanged[date + '_' + time] = { date: date, time: time, status: status };
+  }
+
+  function startDrag(e, date, time) {
+    e.preventDefault();
+    isDragging  = true;
+    dragDate    = date;
+    dragStatus  = getBookingStatus(date, time) === 'full' ? 'available' : 'full';
+    dragChanged = {};
+    applySlotDOM(date, time, dragStatus);
+  }
+
+  function dragOver(date, time) {
+    if (!isDragging || date !== dragDate) return;
+    if (getBookingStatus(date, time) !== dragStatus) {
+      applySlotDOM(date, time, dragStatus);
     }
   }
+
+  async function endDrag() {
+    if (!isDragging) return;
+    isDragging = false;
+    var entries = Object.values(dragChanged);
+    if (entries.length === 0) return;
+    var res = await db.from('bookings').upsert(entries);
+    if (res.error) { alert('저장 실패: ' + res.error.message); loadBookingData(); }
+    dragChanged = {};
+  }
+
+  document.addEventListener('mouseup',   endDrag);
+  document.addEventListener('dragstart', function(e) { e.preventDefault(); });
 
   function prevBookingWeek() { bookingWeekOffset--; loadBookingData(); }
   function nextBookingWeek() { bookingWeekOffset++; loadBookingData(); }
